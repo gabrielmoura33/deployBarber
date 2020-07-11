@@ -1,17 +1,17 @@
-import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
-import pt from 'date-fns/locale/pt';
-import User from '../models/User';
-import File from '../models/File';
-import Notification from '../schemas/Notification';
-import Appointment from '../models/Appointment';
-import Mail from '../../lib/Mail';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { newObj[key] = obj[key]; } } } newObj.default = obj; return newObj; } } function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _yup = require('yup'); var Yup = _interopRequireWildcard(_yup);
+var _datefns = require('date-fns');
+var _pt = require('date-fns/locale/pt'); var _pt2 = _interopRequireDefault(_pt);
+var _User = require('../models/User'); var _User2 = _interopRequireDefault(_User);
+var _File = require('../models/File'); var _File2 = _interopRequireDefault(_File);
+var _Notification = require('../schemas/Notification'); var _Notification2 = _interopRequireDefault(_Notification);
+var _Appointment = require('../models/Appointment'); var _Appointment2 = _interopRequireDefault(_Appointment);
+var _Mail = require('../../lib/Mail'); var _Mail2 = _interopRequireDefault(_Mail);
 
 class AppointmentController {
   async index(req, res) {
     const { page = 1 } = req.query;
 
-    const appointments = await Appointment.findAll({
+    const appointments = await _Appointment2.default.findAll({
       where: { user_id: req.userId, canceled_at: null },
       order: ['date'],
       attributes: ['id', 'date', 'past', 'cancelable'],
@@ -19,12 +19,12 @@ class AppointmentController {
       offset: 0,
       include: [
         {
-          model: User,
+          model: _User2.default,
           as: 'provider',
           attributes: ['id', 'name'],
           include: [
             {
-              model: File,
+              model: _File2.default,
               as: 'avatar',
               attributes: ['id', 'path', 'url'],
             },
@@ -51,7 +51,7 @@ class AppointmentController {
     /**
      * Check if provider_id is a provider
      */
-    const isProvider = await User.findOne({
+    const isProvider = await _User2.default.findOne({
       where: { id: provider_id, provider: true },
     });
 
@@ -74,16 +74,16 @@ class AppointmentController {
      * Check for Past Dates
      */
 
-    const hourStart = startOfHour(parseISO(date));
+    const hourStart = _datefns.startOfHour.call(void 0, _datefns.parseISO.call(void 0, date));
 
-    if (isBefore(hourStart, new Date())) {
+    if (_datefns.isBefore.call(void 0, hourStart, new Date())) {
       return res.status(400).json({ error: 'Past dates are not permited' });
     }
 
     /**
      * Check for  Dates avalability
      */
-    const checkAvailability = await Appointment.findOne({
+    const checkAvailability = await _Appointment2.default.findOne({
       where: {
         provider_id,
         canceled_at: null,
@@ -97,7 +97,7 @@ class AppointmentController {
         .json({ error: 'Appointment Date is not available' });
     }
 
-    const appointment = await Appointment.create({
+    const appointment = await _Appointment2.default.create({
       user_id: req.userId,
       provider_id,
       date,
@@ -106,11 +106,11 @@ class AppointmentController {
     /**
      * Notificate User
      */
-    const user = await User.findByPk(req.userId);
-    const formatedDate = format(hourStart, "'dia' d 'De' MMMM', as 'H:mm'h' ", {
-      locale: pt,
+    const user = await _User2.default.findByPk(req.userId);
+    const formatedDate = _datefns.format.call(void 0, hourStart, "'dia' d 'De' MMMM', as 'H:mm'h' ", {
+      locale: _pt2.default,
     });
-    await Notification.create({
+    await _Notification2.default.create({
       content: `Novo Agendamento de ${user.name} Para o ${formatedDate}`,
       user: provider_id,
     });
@@ -119,15 +119,15 @@ class AppointmentController {
   }
 
   async destroy(req, res) {
-    const appointment = await Appointment.findByPk(req.params.id, {
+    const appointment = await _Appointment2.default.findByPk(req.params.id, {
       include: [
         {
-          model: User,
+          model: _User2.default,
           as: 'provider',
           attributes: ['name', 'email'],
         },
         {
-          model: User,
+          model: _User2.default,
           as: 'user',
           attributes: ['name'],
         },
@@ -139,9 +139,9 @@ class AppointmentController {
         .json({ error: 'You dont have permission to cancel this appointment' });
     }
 
-    const dateWithSub = subHours(appointment.date, 2);
+    const dateWithSub = _datefns.subHours.call(void 0, appointment.date, 2);
 
-    if (isBefore(dateWithSub, new Date())) {
+    if (_datefns.isBefore.call(void 0, dateWithSub, new Date())) {
       return res
         .status(401)
         .json({ error: 'You can only cancel appointments 2 hours in advance' });
@@ -151,15 +151,15 @@ class AppointmentController {
 
     await appointment.save();
 
-    await Mail.sendMail({
+    await _Mail2.default.sendMail({
       to: `${appointment.provider.name} <${appointment.provider.email}>`,
       subject: 'Agendamento Cancelado',
       template: 'cancelation',
       context: {
         provider: appointment.provider.name,
         user: appointment.user.name,
-        date: format(appointment.date, "'dia' d 'De' MMMM', as 'H:mm'h' ", {
-          locale: pt,
+        date: _datefns.format.call(void 0, appointment.date, "'dia' d 'De' MMMM', as 'H:mm'h' ", {
+          locale: _pt2.default,
         }),
       },
     });
@@ -167,4 +167,4 @@ class AppointmentController {
     return res.json(appointment);
   }
 }
-export default new AppointmentController();
+exports. default = new AppointmentController();

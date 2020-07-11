@@ -1,6 +1,6 @@
-import * as Yup from 'yup';
-import User from '../models/User';
-import File from '../models/File';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { newObj[key] = obj[key]; } } } newObj.default = obj; return newObj; } } function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _yup = require('yup'); var Yup = _interopRequireWildcard(_yup);
+var _User = require('../models/User'); var _User2 = _interopRequireDefault(_User);
+var _File = require('../models/File'); var _File2 = _interopRequireDefault(_File);
 
 class UserController {
   async store(req, res) {
@@ -18,13 +18,13 @@ class UserController {
       return res.status(400).json({ error: 'Validation Fails' });
     }
 
-    const userExists = await User.findOne({ where: { email: req.body.email } });
+    const userExists = await _User2.default.findOne({ where: { email: req.body.email } });
 
     if (userExists) {
       return res.status(400).json({ error: 'User Already Exists' });
     }
 
-    const { id, name, email, provider } = await User.create(req.body);
+    const { id, name, email, provider } = await _User2.default.create(req.body);
 
     return res.json({
       id,
@@ -55,9 +55,9 @@ class UserController {
 
     const { email, oldPassword } = req.body;
 
-    const user = await User.findByPk(req.userId);
+    const user = await _User2.default.findByPk(req.userId);
     if (email && email !== user.email) {
-      const userExists = await User.findOne({
+      const userExists = await _User2.default.findOne({
         where: { email },
       });
 
@@ -71,10 +71,10 @@ class UserController {
     }
 
     await user.update(req.body);
-    const { id, name, avatar } = await User.findByPk(req.userId, {
+    const { id, name, avatar } = await _User2.default.findByPk(req.userId, {
       include: [
         {
-          model: File,
+          model: _File2.default,
           as: 'avatar',
           attributes: ['id', 'path', 'url'],
         },
@@ -84,4 +84,4 @@ class UserController {
   }
 }
 
-export default new UserController();
+exports. default = new UserController();
